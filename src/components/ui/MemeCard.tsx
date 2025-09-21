@@ -128,19 +128,48 @@ export default function MemeCard({
     setShowShareMenu(false);
   };
 
+  // State for image loading
+  const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
+
   return (
     <div className={`meme-card card card-hover p-4 ${className}`}>
       {/* Meme Image */}
       <div className="relative mb-4 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
-        <Image
-          src={meme.image_url}
-          alt={meme.caption}
-          width={400}
-          height={300}
-          className="w-full h-auto object-cover"
-          placeholder="blur"
-          blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhIiB4MT0iMCIgeTE9IjAiIHgyPSI0MDAiIHkyPSIzMDAiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM0MENGRkYiIHN0b3Atb3BhY2l0eT0iMC4xIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjNDBDRkZGIiBzdG9wLW9wYWNpdHk9IjAuMiIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+"
-        />
+        {meme.image_url && !imageError ? (
+          <>
+            {/* Loading placeholder */}
+            {imageLoading && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <InlineLoader />
+                <span className="ml-2 text-gray-500">Loading meme...</span>
+              </div>
+            )}
+            
+            {/* Use regular img tag for external backend URLs */}
+            <img
+              src={meme.image_url}
+              alt={meme.caption}
+              className="w-full h-auto object-cover rounded-lg shadow-lg max-w-full"
+              onLoad={() => setImageLoading(false)}
+              onError={() => {
+                setImageError(true);
+                setImageLoading(false);
+              }}
+              style={{ display: imageLoading ? 'none' : 'block' }}
+            />
+          </>
+        ) : (
+          <div className="w-full h-48 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 rounded-lg flex items-center justify-center">
+            <div className="text-center text-gray-500 dark:text-gray-400">
+              <Sparkles className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">Meme image not available</p>
+              {imageError && (
+                <p className="text-xs mt-1">Failed to load image</p>
+              )}
+            </div>
+          </div>
+        )}
         
         {/* Virality Score Badge */}
         <div className="absolute top-2 right-2">
