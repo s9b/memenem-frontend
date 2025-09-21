@@ -11,9 +11,10 @@ import {
   Lightbulb
 } from 'lucide-react';
 
-import { HumorStyle, HUMOR_STYLE_INFO, Meme, GenerateMemeRequest } from '@/types';
+import { HumorStyle, HUMOR_STYLE_INFO, Meme, MemeTemplate, MemeVariation, GenerateMemeRequest } from '@/types';
 import { MemeAPIService, handleAPIError } from '@/lib/api';
 import MemeCard from '@/components/ui/MemeCard';
+import MemeTemplateGrid from '@/components/ui/MemeTemplateGrid';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 /**
@@ -25,8 +26,11 @@ export default function HomePage() {
   const [selectedStyle, setSelectedStyle] = useState<HumorStyle>('sarcastic');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedMeme, setGeneratedMeme] = useState<Meme | null>(null);
+  const [memeTemplates, setMemeTemplates] = useState<MemeTemplate[]>([]);
+  const [selectedVariation, setSelectedVariation] = useState<{ templateId: string, variation: MemeVariation } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [generationMode, setGenerationMode] = useState<'single' | 'variations'>('variations');
 
   // Handle meme generation
   const handleGenerate = async (e: React.FormEvent) => {
@@ -40,6 +44,9 @@ export default function HomePage() {
     setIsGenerating(true);
     setError(null);
     setSuccess(false);
+    setMemeTemplates([]);
+    setSelectedVariation(null);
+    setGeneratedMeme(null);
 
     try {
       const request: GenerateMemeRequest = {
@@ -47,16 +54,44 @@ export default function HomePage() {
         style: selectedStyle
       };
 
-      const response = await MemeAPIService.generateMeme(request);
-      
-      setGeneratedMeme(response.meme);
-      setSuccess(true);
+      if (generationMode === 'variations') {
+        const response = await MemeAPIService.generateMemeVariations(request);
+        setMemeTemplates(response.templates);
+        setSuccess(true);
+      } else {
+        const response = await MemeAPIService.generateMeme(request);
+        setGeneratedMeme(response.meme);
+        setSuccess(true);
+      }
       
     } catch (error) {
       const errorMessage = handleAPIError(error);
       setError(errorMessage);
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  // Handle variation selection
+  const handleVariationSelect = (templateId: string, variation: MemeVariation) => {
+    setSelectedVariation({ templateId, variation });
+    
+    // Find the template to get additional info
+    const template = memeTemplates.find(t => t.template_id === templateId);
+    if (template) {
+      // Convert to Meme format for compatibility with existing MemeCard
+      const meme: Meme = {
+        meme_id: `${templateId}_${variation.variation_id}`,
+        template_id: templateId,
+        template_name: template.template_name,
+        caption: variation.caption || Object.values(variation.captions || {}).join(' / '),
+        style: selectedStyle,
+        image_url: template.image_url,
+        virality_score: variation.virality_score,
+        upvotes: 0,
+        timestamp: new Date().toISOString()
+      };
+      setGeneratedMeme(meme);
     }
   };
 
@@ -202,6 +237,45 @@ export default function HomePage() {
             </div>
           </div>
 
+          {/* Generation Mode Toggle */}
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-light-text dark:text-dark-text">
+              Generation Mode
+            </label>
+            <div className="flex space-x-3">
+              <button
+                type="button"
+                onClick={() => setGenerationMode('variations')}
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                  generationMode === 'variations'
+                    ? 'bg-primary text-white shadow-lg'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+                disabled={isGenerating}
+              >
+                🎭 Multiple Variations
+              </button>
+              <button
+                type="button"
+                onClick={() => setGenerationMode('single')}
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                  generationMode === 'single'
+                    ? 'bg-primary text-white shadow-lg'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+                disabled={isGenerating}
+              >
+                ⚡ Single Meme
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {generationMode === 'variations' 
+                ? 'Generate 4-5 caption variations across multiple templates'
+                : 'Generate one meme with the best template'
+              }
+            </p>
+          </div>
+
           {/* Error Message */}
           {error && (
             <div className="error-state">
@@ -231,8 +305,38 @@ export default function HomePage() {
         </form>
       </div>
 
-      {/* Generated Meme Display */}
-      {generatedMeme && (
+      {/* Multi-Variation Templates Display */}
+      {memeTemplates.length > 0 && (
+        <div className="max-w-6xl mx-auto animate-slide-up">
+          <MemeTemplateGrid
+            templates={memeTemplates}
+            onVariationSelect={handleVariationSelect}
+          />
+        </div>
+      )}
+
+      {/* Selected Variation Display */}
+      {selectedVariation && generatedMeme && (
+        <div className="max-w-2xl mx-auto animate-slide-up mt-8">
+          <div className="text-center mb-6">
+            <h3 className="text-2xl font-semibold text-light-text dark:text-dark-text mb-2">
+              Your Selected Meme is Ready! 🎉
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400">
+              Selected from {memeTemplates.find(t => t.template_id === selectedVariation.templateId)?.template_name}
+            </p>
+          </div>
+          
+          <MemeCard
+            meme={generatedMeme}
+            onUpvote={handleMemeUpvote}
+            showFullDetails={true}
+          />
+        </div>
+      )}
+
+      {/* Single Generated Meme Display */}
+      {generatedMeme && generationMode === 'single' && !selectedVariation && (
         <div className="max-w-2xl mx-auto animate-slide-up">
           <div className="text-center mb-6">
             <h3 className="text-2xl font-semibold text-light-text dark:text-dark-text mb-2">

@@ -2,6 +2,7 @@ import axios, { AxiosInstance, AxiosError, AxiosResponse } from 'axios';
 import {
   GenerateMemeRequest,
   GenerateMemeResponse,
+  GenerateMemesResponse,
   TemplatesResponse,
   TrendingMemesResponse,
   UpvoteRequest,
@@ -84,6 +85,40 @@ export class MemeAPIService {
       return response.data;
     } catch (error) {
       console.error('Generate meme error:', error);
+      
+      // Handle specific backend error messages
+      if (axios.isAxiosError(error) && error.response?.data?.detail) {
+        const detail = error.response.data.detail;
+        
+        if (detail.includes('rate limit') || detail.includes('quota')) {
+          throw new Error('AI service temporarily unavailable. Please try again in a few seconds.');
+        }
+        
+        if (detail.includes('no suitable templates')) {
+          throw new Error('No suitable meme templates found for this topic. Try a different topic!');
+        }
+        
+        throw new Error(detail);
+      }
+      
+      throw error;
+    }
+  }
+
+  /**
+   * Generate multiple meme variations with 4-5 caption options per relevant template
+   */
+  static async generateMemeVariations(request: GenerateMemeRequest): Promise<GenerateMemesResponse> {
+    try {
+      const response = await api.post<GenerateMemesResponse>(API_ENDPOINTS.GENERATE_VARIATIONS, request);
+      
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to generate meme variations');
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('Generate meme variations error:', error);
       
       // Handle specific backend error messages
       if (axios.isAxiosError(error) && error.response?.data?.detail) {

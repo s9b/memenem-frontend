@@ -47,10 +47,36 @@ export interface UpvoteRequest {
   meme_id: string;
 }
 
+// Multi-variation meme types
+export interface MemeVariation {
+  variation_id: number;
+  caption?: string;
+  captions?: Record<string, string>;
+  virality_score: number;
+  metadata: Record<string, any>;
+}
+
+export interface MemeTemplate {
+  template_id: string;
+  template_name: string;
+  image_url: string;
+  panel_count: number;
+  characters: string[];
+  variations: MemeVariation[];
+  average_virality_score: number;
+}
+
 // API Response types
 export interface GenerateMemeResponse {
   success: boolean;
   meme: Meme;
+  message?: string;
+}
+
+export interface GenerateMemesResponse {
+  success: boolean;
+  templates: MemeTemplate[];
+  count: number;
   message?: string;
 }
 
@@ -148,6 +174,7 @@ export const HUMOR_STYLE_INFO: HumorStyleInfo[] = [
 export const API_ENDPOINTS = {
   TEMPLATES: '/api/v1/templates',
   GENERATE: '/api/v1/generate',
+  GENERATE_VARIATIONS: '/api/v1/generate-variations',
   TRENDING: '/api/v1/trending',
   UPVOTE: '/api/v1/upvote',
   SCORE: '/api/v1/score',
