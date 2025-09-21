@@ -1,0 +1,152 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom CSS variables for theme switching */
+:root {
+  --background: #F5F8FF;
+  --foreground: #0F111A;
+  --card: #FFFFFF;
+  --card-foreground: #0F111A;
+  --border: #E2E8F0;
+  --primary: #40CFFF;
+}
+
+.dark {
+  --background: #0F111A;
+  --foreground: #E0E0E0;
+  --card: #1A1D29;
+  --card-foreground: #E0E0E0;
+  --border: #2D3748;
+  --primary: #40CFFF;
+}
+
+/* Base styles */
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(64, 207, 255, 0.8);
+}
+
+/* Custom utility classes */
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 hover:bg-opacity-90 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .btn-secondary {
+    @apply border-2 border-primary text-primary font-semibold py-3 px-6 rounded-lg transition-all duration-200 hover:bg-primary hover:text-white hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .card {
+    @apply bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-xl shadow-lg transition-all duration-200;
+  }
+  
+  .card-hover {
+    @apply hover:shadow-xl hover:scale-105 hover:shadow-primary/20;
+  }
+  
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent;
+  }
+  
+  .input-field {
+    @apply w-full px-4 py-3 border border-light-border dark:border-dark-border rounded-lg bg-light-card dark:bg-dark-card text-light-text dark:text-dark-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200;
+  }
+  
+  .glass-effect {
+    @apply backdrop-blur-md bg-white/10 dark:bg-black/20 border border-white/20 dark:border-white/10;
+  }
+}
+
+/* Loading animations */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.shimmer {
+  animation: shimmer 2s infinite;
+  background: linear-gradient(90deg, transparent, rgba(64, 207, 255, 0.2), transparent);
+  background-size: 200px 100%;
+}
+
+/* Meme card specific styles */
+.meme-card {
+  @apply relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-2xl hover:shadow-primary/30;
+}
+
+.meme-card::before {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent transform -skew-x-12 -translate-x-full transition-transform duration-700;
+}
+
+.meme-card:hover::before {
+  @apply translate-x-full;
+}
+
+/* Social share buttons */
+.social-btn {
+  @apply inline-flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 hover:scale-110 active:scale-95;
+}
+
+.social-btn.twitter {
+  @apply bg-blue-500 hover:bg-blue-600 text-white;
+}
+
+.social-btn.instagram {
+  @apply bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white;
+}
+
+.social-btn.linkedin {
+  @apply bg-blue-600 hover:bg-blue-700 text-white;
+}
+
+/* Error and success states */
+.error-state {
+  @apply text-red-500 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4;
+}
+
+.success-state {
+  @apply text-green-500 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4;
+}
